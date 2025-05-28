@@ -1,0 +1,39 @@
+# Ignore Python bytecode
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+
+# Ignore virtual environments inside any subfolder
+**/venv/
+**/.venv/
+**/ENV/
+**/env/
+
+# Ignore package artifacts
+**/build/
+**/dist/
+**/*.egg-info/
+**/.eggs/
+
+# Pytest and mypy cache
+**/.pytest_cache/
+**/.mypy_cache/
+**/.coverage
+**/.cache/
+**/htmlcov/
+
+# IDE settings
+**/.vscode/
+**/.idea/
+
+# Logs
+**/*.log
+
+# Local environment files (API keys, configs)
+**/.env
+**/.env.*
+
+# Docker and system junk
+**/*.pid
+**/.DS_Store
+**/Thumbs.db
