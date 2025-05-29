@@ -60,7 +60,6 @@ async def ping_health_endpoint():
         try:
             await asyncio.wait_for(should_shutdown.wait(), timeout=backoff)
         except asyncio.TimeoutError:
-
             pass
 
 @app.websocket("/ws")

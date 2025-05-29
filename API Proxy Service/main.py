@@ -1,6 +1,3 @@
-# Code file begins here
-# FastAPI-based resilient API proxy with fallback logic and heartbeat integration
-
 from fastapi import FastAPI, WebSocket, HTTPException
 from fastapi.responses import JSONResponse
 import httpx
@@ -16,7 +13,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-# Load environment variables
 load_dotenv()
 
 API_PROXY_PORT = int(os.getenv("HEARTBEAT_PORT", 8000))
@@ -36,6 +32,7 @@ RESET_TIMEOUT = 300
 last_failure_time = {"weatherapi": None, "weatherstack": None}
 
 websocket_clients = []
+inactive_apis = []
 
 async def notify_heartbeat(event: str):
     disconnected_clients = []
@@ -67,13 +64,14 @@ async def fetch_from_weatherapi(city: str):
             if response.status_code == 429:
                 raise httpx.HTTPStatusError("Rate limit", request=response.request, response=response)
             elif response.status_code in [401, 403]:
-                failure_counts["weatherapi"] += 1
-                last_failure_time["weatherapi"] = datetime.datetime.now()
+                # failure_counts["weatherapi"] += 1
+                # last_failure_time["weatherapi"] = datetime.datetime.now()
+                inactive_apis.append("weatherapi")
                 raise httpx.HTTPStatusError("Auth error", request=response.request, response=response)
             data = response.json()
             if "error" in data:
-                failure_counts["weatherapi"] += 1
-                last_failure_time["weatherapi"] = datetime.datetime.now()
+                # failure_counts["weatherapi"] += 1
+                # last_failure_time["weatherapi"] = datetime.datetime.now()
                 raise Exception("API Error")
             failure_counts["weatherapi"] = 0
             return {"source": "weatherapi", "city": data["location"]["name"], "temperature": data["current"]["temp_c"], "condition": data["current"]["condition"]["text"]}
@@ -91,8 +89,9 @@ async def fetch_from_weatherstack(city: str):
             if response.status_code == 429:
                 raise httpx.HTTPStatusError("Rate limit", request=response.request, response=response)
             elif response.status_code in [401, 403]:
-                failure_counts["weatherstack"] += 1
-                last_failure_time["weatherstack"] = datetime.datetime.now()
+                # failure_counts["weatherstack"] += 1
+                # last_failure_time["weatherstack"] = datetime.datetime.now()
+                inactive_apis.append("weatherapi")
                 raise httpx.HTTPStatusError("Auth error", request=response.request, response=response)
             data = response.json()
             if "error" in data:
@@ -107,7 +106,8 @@ async def fetch_from_weatherstack(city: str):
         raise
 
 @app.get("/weather")
-async def get_weather(city: str):
+async def get_weather():
+    city = "London"
     global active_api
     try:
         if check_circuit_breaker("weatherapi"):
@@ -146,7 +146,7 @@ def health():
         "weatherapi": "open" if failure_counts["weatherapi"] >= MAX_FAILURES else "closed",
         "weatherstack": "open" if failure_counts["weatherstack"] >= MAX_FAILURES else "closed"
     }
-    inactive_apis = [api for api, status in circuit_status.items() if status == "open"]
+    # inactive_apis = [api for api, status in circuit_status.items() if status == "open"]
     return {
         "status": "ok",
         "active_api": active_api,
