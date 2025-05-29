@@ -33,14 +33,6 @@ app = FastAPI(title="HeartBeat Service")
 # Shutdown flag
 should_shutdown = asyncio.Event()
 
-# @app.get("/")
-# async def root():
-#     return {"message": "HeartBeat Service is running"}
-#
-# @app.get("/health")
-# async def health():
-#     return {"status": "healthy", "service": "HeartBeat Service"}
-
 async def ping_health_endpoint():
     backoff = 1
     while not should_shutdown.is_set():

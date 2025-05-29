@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  api-proxy:
+    build:
+      context: ./API Proxy Service
+    container_name: api-proxy
+    env_file:
+      - API Proxy Service/.env
+    ports:
+      - "8000:8000"
+    networks:
+      - proxy-net
+
+  heartbeat:
+    build:
+      context: ./Heartbeat Service
+    container_name: heartbeat
+    env_file:
+      - Heartbeat Service/.env
+    ports:
+      - "8001:8001"
+    depends_on:
+      - api-proxy
+    networks:
+      - proxy-net
+
+networks:
+  proxy-net:
+    driver: bridge
